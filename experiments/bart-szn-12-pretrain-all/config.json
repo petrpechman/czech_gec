@@ -1,0 +1,64 @@
+{
+    "seed": 42,
+
+    "data_paths": ["../../data/syn/syn_v4_tokenized_cleaned.txt"],
+    "num_parallel": 44,
+    "max_length": 128,
+    "shuffle_buffer": 5000,
+    "bucket_boundaries": [32, 64, 96],
+    "bucket_batch_sizes_per_gpu": [128, 128, 128, 128],
+    "errors_from_file": false,
+
+    "model": "../../models/bart-tokenizer-data-jakub/",
+    "tokenizer": "../../models/bart-tokenizer-data-jakub/",
+    "from_config": true,
+    "steps_per_epoch": 128000,
+    "epochs": 100000,
+    "use_f16": true,
+    
+    "optimizer":{
+        "name": "AdamW",
+        "params":{
+            "learning_rate": 5e-5,
+            "weight_decay": 0.01,
+            "epsilon": 1e-6,
+            "global_clipnorm": 1.0
+        }
+    },
+
+    "loss": "SCC",
+
+    "lang": "cs",
+    "token_file": "../../data/syn/syn2010_tokens.tsv",
+    "token_err_distribution": [0.5, 0.2, 0.1, 0.05, 0.1, 0.05],
+    "derinet_dist": 2,
+    "char_err_distribution": [0.2, 0.2, 0.2, 0.2, 0.2],
+    "token_err_prob": 0.15,   
+    "char_err_prob": 0.02,
+
+    
+    "log_file": "./tmp/logs",
+    "profile_batch": [2000, 2500],
+    "model_checkpoint_path": "./tmp/checkpoint/",
+    "backup_dir": "./tmp/backup",
+    
+    "count_output": "./counts.txt",
+    "errors_config": "./errors_config.json",
+
+
+    "m2_data_dev": "../../data/akces-gec/dev/dev.all.m2",
+    "m2_data_test": "../../data/akces-gec/test/test.all.m2",
+    "batch_size": 16,
+    
+    "max_unchanged_words": 2,
+    "beta": 0.5,
+    "ignore_whitespace_casing": false,
+    "verbose": false,
+    "very_verbose": false,
+
+    "max_eval_length": 512,
+    
+    "best_ckpt_filename": "./f_score_dev.json",
+    
+    "save_every": 10
+}

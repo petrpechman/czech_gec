@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petr-bart-train-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc
+  labels:
+    app: petr-bart-train-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc
+    team: srch-mlops
+  namespace: petr-test
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: petr-bart-train-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: petr-bart-train-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc
+        team: srch-mlops
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: mlops-secrets
+      # nodeSelector:
+      #   kubernetes.io/hostname: "node-gpu-w02"
+      containers:
+      - name: worker
+        image: docker.ops.iszn.cz/mlops/petr/train:errant
+        # imagePullPolicy: Always
+        # command: [ "sleep" ]
+        # args: [ "infinity"]
+        command: ["/bin/bash", "-c", "source ~/miniconda3/etc/profile.d/conda.sh && conda activate && cd /pechmanp/czech-gec/code/src/bart-szn-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc && python ../pipeline/run.py --config config.json"]
+        env:
+          - name: https_proxy
+            value: "http://proxy.dev.dszn.cz:3128"
+          - name: http_proxy
+            value: "http://proxy.dev.dszn.cz:3128"
+          - name: HTTPS_PROXY
+            value: "http://proxy.dev.dszn.cz:3128"
+          - name: HTTP_PROXY
+            value: "http://proxy.dev.dszn.cz:3128"
+        resources:
+          limits:
+            # cpu: "20"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+          requests:
+            # cpu: "20"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: network-datastore
+            mountPath: /pechmanp
+      volumes:
+      - name: network-datastore
+        hostPath:
+          path: /mnt/home/pechmanp
