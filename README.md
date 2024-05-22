@@ -19,3 +19,6 @@ To run the experiment, we need to have several configuration files that define t
 
 ### 3. Kubernetes Deployment
 Example deployments for model training and evaluation are stored in the [`kubernetes`](./kubernetes/) folder. Deployments always run a python script [runp.py](./code/src/pipeline/run.py) which starts the relevant training or evaluation.
+
+### Others
+In the [utils](./code/src/utils/) folder, there are necessary scripts that are used in training or evaluation, but there are also scripts for initializing the model, creating a tokenizer, using the [Aspell](http://aspell.net/) or [MorpohoDiTa](https://ufal.mff.cuni.cz/morphodita) tools.
