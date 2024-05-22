@@ -5,5 +5,5 @@
 Build:
 ```bash
 IMAGE_NAME="<image-name>"
-bash docker/build.sh $IMAGE_NAME
+bash build.sh $IMAGE_NAME
 ```

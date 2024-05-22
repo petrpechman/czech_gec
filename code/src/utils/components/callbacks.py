@@ -1,4 +1,7 @@
+import os
+
 import tensorflow as tf
+
 from typing import Union
 
 # My Callback
@@ -25,4 +28,7 @@ class MyBackupAndRestore(tf.keras.callbacks.Callback):
         self._current_epoch = epoch
 
     def on_epoch_end(self, epoch, logs=None):
+        # if self.epoch_name:
+        #     self.manager._checkpoint_prefix = os.path.join(self.manager._directory, f"{self.epoch_name}-{epoch}/")
         self.manager.save()
+        # save_path = checkpoint.save(checkpoint_directory)

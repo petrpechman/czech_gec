@@ -1,20 +1,22 @@
+import sys
+sys.path.append('..')
+
 import os
 import time
-import json
 import numpy as np
 import tensorflow as tf
 
-from transformers import AutoConfig
-from transformers import AutoTokenizer
 from transformers import TFAutoModelForSeq2SeqLM
+from transformers import AutoTokenizer
+from transformers import AutoConfig
+import json
 
 from m2scorer.m2scorer import load_annotation
 
 from tensorflow.keras import mixed_precision
 
-from src.utils import dataset_utils
-from src.utils.udpipe_tokenizer.udpipe_tokenizer import UDPipeTokenizer
-from src.utils.components.callbacks import MyBackupAndRestore
+from utils import dataset_utils
+from utils.udpipe_tokenizer.udpipe_tokenizer import UDPipeTokenizer
 
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -30,20 +32,14 @@ def main(config_filename: str):
     
     SEED = config['seed']
 
-    # optimizer
-    OPTIMIZER_NAME = config['optimizer']['name']
-    OPTIMIZER_PARAMS = config['optimizer']['params']
-    LR = OPTIMIZER_PARAMS.get('learning_rate', None)
-
     # data loading
-    EVAL_TYPE_DEV, EVAL_TYPE_TEST = ['m2_scorer'], ['m2_scorer']
     M2_DATA_DEV = config['m2_data_dev']
     if not isinstance(M2_DATA_DEV, str):
-        M2_DATA_DEV, EVAL_TYPE_DEV = M2_DATA_DEV
+        M2_DATA_DEV, _ = M2_DATA_DEV
 
     M2_DATA_TEST = config['m2_data_test']
     if not isinstance(M2_DATA_TEST, str):
-        M2_DATA_TEST, EVAL_TYPE_TEST = M2_DATA_TEST
+        M2_DATA_TEST, _ = M2_DATA_TEST
     DEV_GECCC_DATASETS = config.get('dev_geccc_datasets', [])
     TEST_GECCC_DATASETS = config.get('test_geccc_datasets', [])
     RETAG_DEV_GECCC_DATASETS = config.get('retag_dev_geccc_datasets', [])
@@ -55,40 +51,16 @@ def main(config_filename: str):
     MODEL = config['model']
     TOKENIZER = config['tokenizer']
     FROM_CONFIG = config['from_config']
-    # USE_F16 = config['use_f16']
     USE_F16 = False
     
     # logs
     MODEL_CHECKPOINT_PATH = config['model_checkpoint_path']
-
-    # evaluation
-    MAX_UNCHANGED_WORDS = config['max_unchanged_words']
-    BETA = config['beta']
-    IGNORE_WHITESPACE_CASING = config['ignore_whitespace_casing']
-    VERBOSE = config['verbose']
-    VERY_VERBOSE = config['very_verbose']
     
     MAX_EVAL_LENGTH = config['max_eval_length']
-
-    # TIMEOUT = config['timeout'] # it cat be useful for geccc
-
-    # OUTPUT_DIR = 'results' # "m2_data": "../../data/geccc/dev/sorted_sentence.m2",
-    OUTPUT_DIR_DEV = 'results-dev' # "m2_data": "../../data/akces-gec/dev/dev.all.m2",
-    OUTPUT_DIR_TEST = 'results-test' # "m2_data": "../../data/akces-gec/test/test.all.m2",
     FILE_DEV_PREDICTIONS = 'predictions_dev.txt'
     FILE_TEST_PREDICTIONS = 'predictions_test.txt'
 
-    BEST_CKPT_FILENAME = config.get("best_ckpt_filename", None)
-    if BEST_CKPT_FILENAME:
-        with open(BEST_CKPT_FILENAME) as json_file:
-            best_ckpt = json.load(json_file)
-        BEST_CKPT_NAME = best_ckpt['name']
-        BEST_CKPT_FSCORE = best_ckpt['fscore']
-
-    NUM_EVAL_PROCESSES = config.get('num_eval_processes', 4)
     EVAL_GECCC_EVERY = config.get('eval_geccc_every', 10)
-
-    FIRST_CHECKPOINT = config.get('first_checkpoint', None)
 
     tf.random.set_seed(SEED)
     
@@ -116,14 +88,8 @@ def main(config_filename: str):
         dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
         return dataset
     
-    dev_source_sentences, dev_gold_edits = load_annotation(M2_DATA_DEV)
-    test_source_sentences, test_gold_edits = load_annotation(M2_DATA_TEST)
-
-    dev_ref_m2, test_ref_m2 = None, None
-    if 'errant' in EVAL_TYPE_DEV:
-        dev_ref_m2 = open(M2_DATA_DEV).read().strip().split("\n\n")
-    if 'errant' in EVAL_TYPE_TEST:
-        test_ref_m2 = open(M2_DATA_TEST).read().strip().split("\n\n")
+    dev_source_sentences, _ = load_annotation(M2_DATA_DEV)
+    test_source_sentences, _ = load_annotation(M2_DATA_TEST)
     
     datasets = []
     refs = []
@@ -145,6 +111,7 @@ def main(config_filename: str):
     dev_dataset = get_dataset_pipeline(dev_source_sentences)
     test_dataset = get_dataset_pipeline(test_source_sentences)
     ###
+
     # GECCC_DATASETS:
     def prepare_datasets(list_datasets):
         datasets = []
@@ -165,10 +132,10 @@ def main(config_filename: str):
             datasets.append((source_sentences, gold_edits, dataset))
         return datasets, refs, eval_types
 
-    dev_geccc_datasets, dev_geccc_refs, dev_geccc_eval_types = prepare_datasets(DEV_GECCC_DATASETS)
-    test_geccc_datasets, test_geccc_refs, test_geccc_eval_types = prepare_datasets(TEST_GECCC_DATASETS)
-    retag_dev_geccc_datasets, retag_dev_geccc_refs, retag_dev_geccc_eval_types = prepare_datasets(RETAG_DEV_GECCC_DATASETS)
-    retag_test_geccc_datasets, retag_test_geccc_refs, retag_test_geccc_eval_types = prepare_datasets(RETAG_TEST_GECCC_DATASETS)
+    dev_geccc_datasets, _, _ = prepare_datasets(DEV_GECCC_DATASETS)
+    test_geccc_datasets, _, _ = prepare_datasets(TEST_GECCC_DATASETS)
+    retag_dev_geccc_datasets, _, _ = prepare_datasets(RETAG_DEV_GECCC_DATASETS)
+    retag_test_geccc_datasets, _, _ = prepare_datasets(RETAG_TEST_GECCC_DATASETS)
     ###
     
     ### Prepare right model:
@@ -198,37 +165,8 @@ def main(config_filename: str):
         step = int(unevaluated_checkpoint[5:])
         predictions_filepath = os.path.join(MODEL_CHECKPOINT_PATH, str(step) + "-" + predictions_file)
 
-        ### Optimizer:
-        if OPTIMIZER_NAME == 'Adam':
-            optimizer = tf.keras.optimizers.Adam(**OPTIMIZER_PARAMS)
-        elif OPTIMIZER_NAME == 'AdamW':
-            optimizer = tf.keras.optimizers.experimental.AdamW(**OPTIMIZER_PARAMS)
-        elif OPTIMIZER_NAME == 'Adafactor':
-            optimizer = tf.keras.optimizers.experimental.Adafactor(**OPTIMIZER_PARAMS)
-        elif OPTIMIZER_NAME == 'AdaptiveAdam':
-            class LRSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
-                def __init__(self, warmup_steps, d_model):
-                    self.warmup_steps = tf.cast(warmup_steps, tf.float32)
-                    self.d_model = tf.cast(d_model, tf.float32)
-
-                def __call__(self, step):
-                    step = tf.cast(step, tf.float32)
-                    lr = (1.0/tf.math.sqrt(self.d_model)) * tf.math.minimum(1.0 / tf.math.sqrt(step), (1.0 / tf.math.sqrt(self.warmup_steps)) * ((1.0 * step) / self.warmup_steps))
-                    return lr
-            learning_rate = LRSchedule(OPTIMIZER_PARAMS['warmup_steps'], MAX_EVAL_LENGTH)
-            del OPTIMIZER_PARAMS['warmup_steps']
-            optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate, **OPTIMIZER_PARAMS)
-        elif OPTIMIZER_NAME == 'CosineDecay':
-            cosine_decay_scheduler = tf.keras.optimizers.schedules.CosineDecay(**OPTIMIZER_PARAMS)
-            optimizer = tf.keras.optimizers.experimental.Adafactor(learning_rate=cosine_decay_scheduler)
-        ###
-
-
         ### Load model weights for evaluation
-        # model.load_weights(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint + "/")).expect_partial()
-
-        mybackup = MyBackupAndRestore(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint), optimizer, model, max_to_keep=1)
-        status = mybackup.checkpoint.restore(mybackup.manager.latest_checkpoint)
+        model.load_weights(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint + "/")).expect_partial()
         ###
 
         print(f"Eval: {unevaluated_checkpoint}")
@@ -262,7 +200,6 @@ def main(config_filename: str):
         print("End of writing predictions...")
         return
 
-    last_evaluated = 'ckpt-0'
     while True:
         if os.path.isdir(MODEL_CHECKPOINT_PATH):
             unevaluated = [f for f in os.listdir(MODEL_CHECKPOINT_PATH) if f.startswith('ckpt')]
@@ -291,10 +228,6 @@ def main(config_filename: str):
                             generate_and_score(unevaluated_checkpoint, dataset, file_predictions)
 
                     evaluate_every_two = False
-                    # if FIRST_CHECKPOINT and (int(unevaluated_checkpoint[5:]) - 10) < FIRST_CHECKPOINT:
-                    #     evaluate_every_two = True
-                        # if int(unevaluated_checkpoint[5:]) % 1 == 0:
-                        #     evaluate_every_two = True
 
                     if evaluate_every_two or (int(unevaluated_checkpoint[5:]) % EVAL_GECCC_EVERY == 0):
                         eval_splitted_dataset(dev_geccc_datasets, unevaluated_checkpoint)
@@ -311,7 +244,6 @@ def main(config_filename: str):
 
 
                     print(f"Delete: {os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint)}")
-                    # shutil.rmtree(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint))
                     os.rename(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint), os.path.join(MODEL_CHECKPOINT_PATH, 'saved-' + unevaluated_checkpoint))
 
                 except Exception as e:

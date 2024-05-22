@@ -1,14 +1,12 @@
-import aspell
-import random
-
+from multiprocessing import Queue
 from typing import List
 from typing import Optional
+import random
+from . import introduce_errors
+from . import create_errors
+from .MorphoDiTa.generate_forms import GenerateForms
+import aspell
 from multiprocessing import Pool
-from multiprocessing import Queue
-
-import src.utils.introduce_errors as introduce_errors
-import src.utils.create_errors as create_errors
-import src.utils.MorphoDiTa.generate_forms as GenerateForms
 
 class GenereteErrorLine():
     '''
@@ -55,6 +53,8 @@ def data_loader(filename, queue, start_position, end_position, gel: GenereteErro
     
     if error_generator:
         error_generator._init_annotator()
+
+    # error_generator._init_annotator()
 
     with open(filename, 'r') as f:
         # find start position

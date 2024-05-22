@@ -1,11 +1,13 @@
 import numpy as np
 
-from abc import ABC
+# from edit import Edit
+from .edit import Edit
+
 from typing import List
-from abc import abstractmethod
-from unidecode import unidecode
-from src.utils.edit import Edit
+from abc import ABC, abstractmethod
 from errant.annotator import Annotator
+
+from unidecode import unidecode
 
 class Error(ABC):
     def __init__(self, target_prob: float, absolute_prob: float = 0.0, use_absolute_prob: bool = False) -> None:
@@ -891,3 +893,88 @@ ERRORS = {
     "RemoveDiacritics": ErrorRemoveDiacritics,
     "AddDiacritics": ErrorAddDiacritics,
 }
+
+### NO USED:
+
+class ErrorReplace(Error):
+    def __call__(self, parsed_sentence, annotator: Annotator, aspell_speller) -> List[Edit]:
+        edits = []
+        for i, token in enumerate(parsed_sentence):
+            if token.text.isalpha():
+                proposals = aspell_speller.suggest(token.text)[:10]
+                if len(proposals) > 0:
+                    new_token_text = np.random.choice(proposals)
+                    c_toks = annotator.parse(new_token_text)
+                    edit = Edit(token, c_toks, [i, i+1, i, i+1], type="Replace")
+                    edits.append(edit)
+        return edits
+
+
+class ErrorInsert(Error):
+    def __init__(self, target_prob: float, word_vocabulary) -> None:
+        super().__init__(target_prob)
+        self.word_vocabulary = word_vocabulary
+
+    def __call__(self, parsed_sentence, annotator: Annotator, aspell_speller = None) -> List[Edit]:
+        edits = []
+        for i, token in enumerate(parsed_sentence):
+            new_token_text = np.random.choice(self.word_vocabulary)
+            c_toks = annotator.parse(new_token_text)
+            edit = Edit(token, c_toks, [i, i, i, i+1], type="Insert")
+            edits.append(edit)
+        return edits
+
+
+class ErrorDelete(Error):
+    def __init__(self, target_prob: float) -> None:
+        super().__init__(target_prob)
+        self.allowed_source_delete_tokens = [',', '.', '!', '?']
+
+    def __call__(self, parsed_sentence, annotator: Annotator, aspell_speller = None) -> List[Edit]:
+        edits = []
+        for i, token in enumerate(parsed_sentence):
+            if token.text.isalpha() and token.text not in self.allowed_source_delete_tokens:
+                c_toks = annotator.parse("")
+                edit = Edit(token, c_toks, [i, i+1, i, i], type="Remove")
+                edits.append(edit)
+        return edits
+
+
+class ErrorRecase(Error):
+    def __call__(self, parsed_sentence, annotator: Annotator, aspell_speller = None) -> List[Edit]:
+        edits = []
+        for i, token in enumerate(parsed_sentence):
+            if token.text.islower():
+                new_token_text = token.text[0].upper() + token.text[1:]
+            else:
+                num_recase = min(len(token.text), max(1, int(np.round(np.random.normal(0.3, 0.4) * len(token.text)))))
+                char_ids_to_recase = np.random.choice(len(token.text), num_recase, replace=False)
+                new_token_text = ''
+                for char_i, char in enumerate(token.text):
+                    if char_i in char_ids_to_recase:
+                        if char.isupper():
+                            new_token_text += char.lower()
+                        else:
+                            new_token_text += char.upper()
+                    else:
+                        new_token_text += char
+            c_toks = annotator.parse(new_token_text)
+            edit = Edit(token, c_toks, [i, i+1, i, i+1], type="Recase")
+            edits.append(edit)
+        return edits
+
+
+class ErrorSwap(Error):
+    def __call__(self, parsed_sentence, annotator: Annotator, aspell_speller = None) -> List[Edit]:
+        edits = []
+        if len(parsed_sentence) > 1:
+            previous_token = parsed_sentence[0]
+            for i, token in enumerate(parsed_sentence[1:]):
+                i = i + 1
+                c_toks = annotator.parse(token.text + " " + previous_token.text)
+                edit = Edit(token, c_toks, [i-1, i+1, i-1, i+1], type="Swap")
+                edits.append(edit)
+                previous_token = token
+        return edits
+
+###

@@ -14,6 +14,7 @@
     "BeBjeSuffix": [0.0, 0.5, true],
     "BeBjeIn": [0.0, 0.5, true],
     "Sebou": [0.0, 0.5, true],
+
     "SentenceFirstUpper": [0.0, 0.05, true],
     "SentenceFirstLower": [0.0, 0.5, true],
     "TitleToLower": [0.0, 0.5, true],

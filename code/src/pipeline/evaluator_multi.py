@@ -1,6 +1,8 @@
+import sys
+sys.path.append('..')
+
 import os
 import time
-import json
 import errant
 import numpy as np
 import tensorflow as tf
@@ -10,15 +12,16 @@ from typing import Tuple, List
 from transformers import TFAutoModelForSeq2SeqLM
 from transformers import AutoTokenizer
 from transformers import AutoConfig
+import json
 
-from m2scorer.m2scorer import load_annotation
 from m2scorer.levenshtein import batch_multi_pre_rec_f1_part
+from m2scorer.m2scorer import load_annotation
 
 from tensorflow.keras import mixed_precision
 
-from src.utils import dataset_utils
-from src.utils.udpipe_tokenizer.udpipe_tokenizer import UDPipeTokenizer
-from src.utils.retag import retag_edits
+from utils import dataset_utils
+from utils.udpipe_tokenizer.udpipe_tokenizer import UDPipeTokenizer
+from utils.retag import retag_edits
 
 from collections import Counter
 from errant.commands.compare_m2 import simplify_edits, process_edits, merge_dict
@@ -609,8 +612,6 @@ def main(dirs: List[str]):
                     evaluate_every_two = False
                     if FIRST_CHECKPOINT and (int(unevaluated_checkpoint[5:]) - 16) < FIRST_CHECKPOINT:
                         evaluate_every_two = True
-                        # if int(unevaluated_checkpoint[5:]) % 1 == 0:
-                        #     evaluate_every_two = True
                     if evaluate_every_two or (int(unevaluated_checkpoint[5:]) % EVAL_GECCC_EVERY == 0):
                         eval_splitted_dataset(dev_geccc_datasets, dev_geccc_refs, dev_geccc_eval_types, unevaluated_checkpoint, "dev_total_geccc")
                         eval_splitted_dataset(test_geccc_datasets, test_geccc_refs, test_geccc_eval_types, unevaluated_checkpoint, "test_total_geccc")
@@ -639,7 +640,6 @@ def main(dirs: List[str]):
                             last_evaluated = last
                         else:
                             print(f"Delete: {os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint)}")
-                            # shutil.rmtree(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint))
                             os.rename(os.path.join(MODEL_CHECKPOINT_PATH, last_evaluated), os.path.join(MODEL_CHECKPOINT_PATH, 'saved-' + last_evaluated))
                             # Delete model with optimizer:
                             if int(unevaluated_checkpoint[5:]) % 5 != 0:

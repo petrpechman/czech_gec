@@ -1,6 +1,8 @@
+import sys
+sys.path.append('..')
+
 import os
 import json
-
 import tensorflow as tf
 
 from transformers import AutoConfig
@@ -9,12 +11,13 @@ from transformers import TFAutoModelForSeq2SeqLM
 
 from tensorflow.keras import mixed_precision
 
-from src.utils import dataset_utils
-from src.utils import introduce_errors
-from src.utils import create_errors
+from utils import load_data
+from utils import dataset_utils
+from utils import introduce_errors
+from utils import create_errors
 
-from src.utils.components.callbacks import MyBackupAndRestore
-from src.utils.components.losses import MaskedSparseCategoricalCrossEntropy
+from utils.components.callbacks import MyBackupAndRestore
+from utils.components.losses import MaskedSparseCategoricalCrossEntropy
 
 from multiprocessing import Process, Manager
 

@@ -8,7 +8,7 @@ from tokenizers.processors import TemplateProcessing
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--corpus-file", required=True)
-    parser.add_argument("--output-dir", default='../../../models/transformer/')
+    parser.add_argument("--output-dir")
     parser.add_argument("--vocab-size", type=int, default=32_000)
     parser.add_argument("--min-frequency", type=int, default=5)
     args = parser.parse_args()
