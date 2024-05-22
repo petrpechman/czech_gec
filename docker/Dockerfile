@@ -23,11 +23,13 @@ COPY setup_python.sh /setup_python.sh
 RUN chmod 755 /setup_python.sh
 RUN /setup_python.sh $PYTHON_VERSION
 
-ADD aspell /tmp/aspell
+# ADD aspell /tmp/aspell
 ADD aspell-cs-0.51-0  /tmp/aspell-cs-0.51-0
 ADD aspell-python  /tmp/aspell-python
 
 # install fixed Aspell
+WORKDIR /tmp
+RUN git clone -b rel-0.60.8.1 https://github.com/GNUAspell/aspell.git
 WORKDIR /tmp/aspell
 RUN   ./autogen && \
       ./configure && \
@@ -58,6 +60,8 @@ RUN   CUDNN_PATH=$(dirname $(python -c "import nvidia.cudnn;print(nvidia.cudnn._
       echo 'export LD_LIBRARY_PATH=$CUDNN_PATH/lib:$CONDA_PREFIX/lib/:$LD_LIBRARY_PATH' >> $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 
 # install aspell-python
+WORKDIR /tmp
+RUN git clone https://github.com/ndvbd/aspell-python.git
 WORKDIR  /tmp/aspell-python
 RUN   python setup.3.py build &&\
       python setup.3.py install

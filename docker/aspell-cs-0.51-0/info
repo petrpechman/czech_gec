@@ -1,0 +1,17 @@
+name_english Czech
+lang cs
+version 0.51-0
+charset iso8859-2
+soundslike none
+author:
+  name Libor Rejc
+  email rejc at mail cz
+author:
+  name Tomas Cermak
+author:
+  name and others
+copyright GPL
+alias cs czech
+dict:
+  name cs
+  add cs
