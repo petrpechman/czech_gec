@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jakub-train-gec
+  labels:
+    app: jakub-train-gec
+    team: srch-mlops
+  # namespace: nejaky-ns
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jakub-train-gec
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: jakub-train-gec
+        team: srch-mlops
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: mlops-secrets
+      # nodeSelector:
+      #   kubernetes.io/hostname: "node-gpu-w02"
+      containers:
+      - name: worker
+        image: docker.ops.iszn.cz/mlops/petr/train:errant
+        # imagePullPolicy: Always
+        # command: [ "sleep" ]
+        # args: [ "infinity"]
+        # Celé toto startuje to správné prostředí: "/bin/bash", "-c", "source ~/miniconda3/etc/profile.d/conda.sh && conda activate
+        # , pak si změň cestu na svoji: př. cd /naplavaj/czech_gec/code/src/special_corpus
+        # a zbytek nech, ten akorát pouští trénování s config.json ve složce, kam ses přesunul. 
+        command: ["/bin/bash", "-c", "source ~/miniconda3/etc/profile.d/conda.sh && conda activate && cd /pechmanp/czech-gec/code/src/bart-szn-25-pretrain-spec-errs-s-45-r-2-1-fine-geccc && python ../pipeline/run.py --config config.json"]
+        # env:
+        #   - name: https_proxy
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: http_proxy
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: HTTPS_PROXY
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: HTTP_PROXY
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        resources: # Zdroje si změň, jak potřebuješ.
+          limits:
+            cpu: "16"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+          requests:
+            cpu: "16"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: network-datastore
+            mountPath: /pechmanp # Tady taky změnit tam, kam potřebuješ.
+      volumes:
+      - name: network-datastore
+        hostPath:
+          path: /mnt/home/pechmanp # Tady možná bude potřeba změnit cestu k cephu a pravděpodobně i změnit to z moji složky tam, kam potřebuješ.

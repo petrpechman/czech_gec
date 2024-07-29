@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jakub-eval-gec
+  labels:
+    app: jakub-eval-gec
+    team: srch-mlops
+  # namespace: nejaky-ns
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jakub-eval-gec
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        app: jakub-eval-gec
+        team: srch-mlops
+    spec:
+      restartPolicy: Always
+      imagePullSecrets:
+      - name: mlops-secrets
+      containers:
+      - name: worker
+        image: docker.ops.iszn.cz/mlops/petr/train:errant
+        # imagePullPolicy: Always
+        # Stejné jako v trainu, jen je tam navíc parameter --eval
+        command: ["/bin/bash", "-c", "source ~/miniconda3/etc/profile.d/conda.sh && conda activate && cd /pechmanp/czech-gec/code/src/bart-szn-22-pretrain-all-s-55-r-0-1-fine-nwi && python ../pipeline/run.py --config config.json --eval"]
+        # command: [ "sleep" ]
+        # args: [ "infinity"]
+        # env:
+        #   - name: https_proxy
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: http_proxy
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: HTTPS_PROXY
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        #   - name: HTTP_PROXY
+        #     value: "http://proxy.dev.dszn.cz:3128"
+        resources:
+          limits:
+            cpu: "4"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+          requests:
+            cpu: "4"
+            memory: 32Gi
+            nvidia.com/gpu: 1
+        volumeMounts:
+          - name: network-datastore
+            mountPath: /pechmanp # Tady taky změnit tam, kam potřebuješ.
+      volumes:
+      - name: network-datastore
+        hostPath:
+          path: /mnt/home/pechmanp # Tady možná bude potřeba změnit cestu k cephu a pravděpodobně i změnit to z moji složky tam, kam potřebuješ.
