@@ -19,13 +19,14 @@ RUN apt-get update && apt-get install -y build-essential pkg-config curl \
 
 # install Python:
 ARG PYTHON_VERSION=python3.10
-COPY docker-data/setup_python.sh /setup_python.sh
-RUN chmod 755 /setup_python.sh
-RUN /setup_python.sh $PYTHON_VERSION
+# COPY data/setup_python.sh /setup_python.sh
+RUN chmod 755 /setup.python.sh
+RUN /setup.python.sh $PYTHON_VERSION
 
 # ADD aspell /tmp/aspell
-ADD docker-data/aspell-cs-0.51-0  /tmp/aspell-cs-0.51-0
-ADD aspell-python  /tmp/aspell-python
+RUN wget -O /tmp/aspell-cs-0.51-0.tar.bz2 https://ftp.gnu.org/gnu/aspell/dict/cs/aspell6-cs-20040614-1.tar.bz2 && \
+      tar -xvjf /tmp/aspell-cs-0.51-0.tar.bz2 && mv /tmp/aspell6-cs-20040614-1 /tmp/aspell-cs-0.51-0
+RUN git clone https://github.com/ndvbd/aspell-python.git /tmp/aspell-python
 
 # install fixed Aspell
 WORKDIR /tmp
