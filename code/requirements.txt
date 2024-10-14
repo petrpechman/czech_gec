@@ -1,13 +1,14 @@
-numpy
-tensorflow
-transformers
-datasets
-evaluate
-sentencepiece
+typing-extensions==4.5.0
+numpy==1.24.3
+tensorflow==2.12.1
+transformers==4.33.3
+datasets==2.14.5
+evaluate==0.4.0
+sentencepiece==0.1.99
 git+https://github.com/petrpechman/m2scorer.git
 protobuf==3.20.*
-matplotlib
-tensorflow_datasets
-tensorflow_text
-ufal.udpipe
+matplotlib==3.8.0
+tensorflow-datasets==4.9.3
+tensorflow-text==2.12.1
+ufal.udpipe==1.2.0.3
 # spacy # error_checker

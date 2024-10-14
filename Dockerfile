@@ -1,8 +1,8 @@
-ARG TAG
-ARG UBUNTU_VERSION
-ARG CUDA_IMAGE_VERSION
+ARG TAG_ARG="devel"
+ARG UBUNTU_VERSION="22.04"
+ARG CUDA_IMAGE_VERSION="12.1.1-cudnn8"
 
-ARG BASE_IMAGE=nvidia/cuda:${CUDA_IMAGE_VERSION}-${TAG}-ubuntu${UBUNTU_VERSION}
+ARG BASE_IMAGE=nvidia/cuda:${CUDA_IMAGE_VERSION}-${TAG_ARG}-ubuntu${UBUNTU_VERSION}
 FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -13,20 +13,22 @@ LABEL maintainer="hugo.pechman@outlook.cz" \
       org.label-schema.description="Image for LLM model development." \
       org.label-schema.url="https://github.com/petrpechman/czech_gec"
 
-RUN apt-get update && apt-get install -y build-essential pkg-config curl \
+RUN apt-key update && apt-get update && apt-get install -y build-essential pkg-config curl \
     software-properties-common unzip perl libtool gettext autoconf automake \
     texinfo autopoint git vim wget
 
 # install Python:
 ARG PYTHON_VERSION=python3.10
-# COPY data/setup_python.sh /setup_python.sh
-RUN chmod 755 /setup.python.sh
-RUN /setup.python.sh $PYTHON_VERSION
+COPY setup_python.sh /setup_python.sh
+RUN chmod 755 /setup_python.sh
+RUN /setup_python.sh $PYTHON_VERSION
 
 # ADD aspell /tmp/aspell
-RUN wget -O /tmp/aspell-cs-0.51-0.tar.bz2 https://ftp.gnu.org/gnu/aspell/dict/cs/aspell6-cs-20040614-1.tar.bz2 && \
-      tar -xvjf /tmp/aspell-cs-0.51-0.tar.bz2 && mv /tmp/aspell6-cs-20040614-1 /tmp/aspell-cs-0.51-0
-RUN git clone https://github.com/ndvbd/aspell-python.git /tmp/aspell-python
+WORKDIR /tmp
+RUN wget -O aspell-cs-0.51-0.tar.bz2 https://ftp.gnu.org/gnu/aspell/dict/cs/aspell6-cs-20040614-1.tar.bz2 && \
+      tar -xvjf aspell-cs-0.51-0.tar.bz2 && mv aspell6-cs-20040614-1 aspell-cs-0.51-0
+# RUN cp aspell6-cs-20040614-1 aspell-cs-0.51-0 && rm aspell6-cs-20040614-1
+# RUN git clone https://github.com/ndvbd/aspell-python.git /tmp/aspell-python
 
 # install fixed Aspell
 WORKDIR /tmp
@@ -46,7 +48,7 @@ RUN   ./configure && \
 ENV LANG=cs_CZ
 
 # install Conda
-RUN curl https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh && \ 
+RUN curl https://repo.anaconda.com/miniconda/Miniconda3-py311_24.7.1-0-Linux-x86_64.sh -o Miniconda3-latest-Linux-x86_64.sh && \ 
     bash Miniconda3-latest-Linux-x86_64.sh -b
 ENV PATH="/root/miniconda3/bin:${PATH}"
 RUN bash /root/miniconda3/etc/profile.d/conda.sh 
