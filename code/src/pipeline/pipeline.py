@@ -82,7 +82,8 @@ def main(config_filename: str):
     # input edits
     LABEL_PAD_VALUE = -100
     MODEL_TYPE = ""
-    if MODEL in ["google/mt5-small", "google/mt5-base", "google/mt5-large"]:
+    if MODEL in ["google/mt5-small", "google/mt5-base", "google/mt5-large", 
+                 "google/byt5-small", "google/byt5-base", "google/byt5-large"]:
         MODEL_TYPE = "T5"
     else:
         MODEL_TYPE = "Bart-mine"

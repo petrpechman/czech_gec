@@ -7,8 +7,11 @@ import evaluate_files
 import evaluator_multi
 
 
-def main(config_filename: str, eval: bool, infer: bool = False, eval_preds: bool = False, multi_eval: bool = False, infer_opt: bool = False):
-    if sum([multi_eval, infer, eval_preds, infer_opt]) > 1:
+def main(config_filename: str, eval: bool | None, 
+         infer: bool | None = False, eval_preds: bool | None = False, multi_eval: bool | None = False, infer_opt: bool | None = False):
+    params = [multi_eval, infer, eval_preds, infer_opt]
+    params = [False if param is None else True for param in params]
+    if sum(params) > 1:
         print('It is not possible to combine these parameters...')
         return
 
