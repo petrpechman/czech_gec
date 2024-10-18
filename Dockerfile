@@ -23,12 +23,10 @@ COPY setup_python.sh /setup_python.sh
 RUN chmod 755 /setup_python.sh
 RUN /setup_python.sh $PYTHON_VERSION
 
-# ADD aspell /tmp/aspell
+# add aspell cs dict
 WORKDIR /tmp
 RUN wget -O aspell-cs-0.51-0.tar.bz2 https://ftp.gnu.org/gnu/aspell/dict/cs/aspell6-cs-20040614-1.tar.bz2 && \
       tar -xvjf aspell-cs-0.51-0.tar.bz2 && mv aspell6-cs-20040614-1 aspell-cs-0.51-0
-# RUN cp aspell6-cs-20040614-1 aspell-cs-0.51-0 && rm aspell6-cs-20040614-1
-# RUN git clone https://github.com/ndvbd/aspell-python.git /tmp/aspell-python
 
 # install fixed Aspell
 WORKDIR /tmp
