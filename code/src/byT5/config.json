@@ -1,0 +1,58 @@
+{
+    "seed": 42,
+
+    "data_paths": ["/data/syn_v4_tokenized_cleaned.txt"],
+    "num_parallel": 16,
+    "max_length": 408,
+    "shuffle_buffer": 5000,
+    "bucket_boundaries": [32, 64, 96],
+    "bucket_batch_sizes_per_gpu": [128, 128, 128, 128],
+    "errors_from_file": false,
+
+    "model": "google/byt5-small",
+    "tokenizer": "google/byt5-small",
+    "from_config": false,
+    "steps_per_epoch": 1280,
+    "epochs": 100000,
+    "use_f16": true,
+    
+    "optimizer":{
+        "name": "Adafactor",
+        "params":{
+            "learning_rate": 0.00005
+        }
+    },
+
+    "loss": "SCC",
+
+    "lang": "cs",
+    "token_file": "/data/vocabulary_cs.tsv",
+    "token_err_distribution": [0.5, 0.2, 0.1, 0.05, 0.1, 0.05],
+    "derinet_dist": 2,
+    "char_err_distribution": [0.2, 0.2, 0.2, 0.2, 0.2],
+    "token_err_prob": 0.15,   
+    "char_err_prob": 0.02,
+
+    
+    "log_file": "./tmp/logs",
+    "model_checkpoint_path": "./tmp/checkpoint/",
+    "backup_dir": "./tmp/backup",
+    
+    "count_output": "./counts.txt",
+    "errors_config": "./errors_config.json",
+
+
+    "m2_data_dev": "/data/dev.all.m2",
+    "m2_data_test": "/data/test.all.m2",
+    "batch_size": 16,
+    
+    "max_unchanged_words": 2,
+    "beta": 0.5,
+    "ignore_whitespace_casing": false,
+    "verbose": false,
+    "very_verbose": false,
+
+    "max_eval_length": 512,
+    
+    "best_ckpt_filename": "./f_score_dev.json"
+}
