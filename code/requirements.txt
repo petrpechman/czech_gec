@@ -1,5 +1,4 @@
 typing-extensions==4.5.0
-thinc==8.2.5
 pydantic-core==0.42.0
 spacy==3.6.0
 numpy==1.23.5
@@ -14,3 +13,4 @@ matplotlib==3.8.0
 tensorflow-datasets==4.9.3
 tensorflow-text==2.12.1
 ufal.udpipe==1.2.0.3
+thinc==8.1.12 # 8.2.5
