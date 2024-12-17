@@ -243,7 +243,7 @@ def main(config_filename: str):
                             generate_and_score(unevaluated_checkpoint, dataset, file_predictions)
 
 
-                    print(f"Delete: {os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint)}")
+                    print(f"Mark as evaluated: {os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint)}")
                     os.rename(os.path.join(MODEL_CHECKPOINT_PATH, unevaluated_checkpoint), os.path.join(MODEL_CHECKPOINT_PATH, 'saved-' + unevaluated_checkpoint))
 
                 except Exception as e:

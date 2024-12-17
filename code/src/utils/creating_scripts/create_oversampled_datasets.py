@@ -19,7 +19,7 @@ def main():
     parser.add_argument("--romani", type=str)
     parser.add_argument("--sl", type=str)
 
-    parser.add_argument("-p", type=float)
+    parser.add_argument("-f", type=float)
     parser.add_argument("-t", type=int)
 
     parser.add_argument("-o", type=str, default='output.tsv')
@@ -31,10 +31,10 @@ def main():
     romani_lines = get_lines(args.romani)
     sl_lines = get_lines(args.sl)
 
-    nf_size = math.pow(len(nf_lines) * 1.0, args.p) 
-    nwi_size = math.pow(len(nwi_lines) * 1.0, args.p) 
-    romani_size = math.pow(len(romani_lines) * 1.0, args.p) 
-    sl_size = math.pow(len(sl_lines) * 1.0, args.p)
+    nf_size = math.pow(len(nf_lines) * 1.0, args.f) 
+    nwi_size = math.pow(len(nwi_lines) * 1.0, args.f) 
+    romani_size = math.pow(len(romani_lines) * 1.0, args.f) 
+    sl_size = math.pow(len(sl_lines) * 1.0, args.f)
     
     print("Sizes:")
     print(f"NF: {nf_size}")
@@ -89,4 +89,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# Example: python create_oversampled_datasets.py --nf ../../../data/natives/natives_formal.tsv --nwi ../../../data/natives/natives_web_informal.tsv --romani ../../../data/natives/romani.tsv --sl ../../../data/natives/second_learners.tsv -p 0.5 -t 20000
+# Example: python create_oversampled_datasets.py --nf ../../../data/natives/natives_formal.tsv --nwi ../../../data/natives/natives_web_informal.tsv --romani ../../../data/natives/romani.tsv --sl ../../../data/natives/second_learners.tsv -f 0.5 -t 20000
